@@ -40,3 +40,8 @@ export function fetchGeoJson(url: string): CityGeoJSON {
   if (entry.status === "error") throw entry.error;
   return entry.data!;
 }
+
+/** 清空缓存（加载失败后点击「重试」时调用，让下一次渲染重新发起请求）。 */
+export function clearGeoCache() {
+  cache.clear();
+}

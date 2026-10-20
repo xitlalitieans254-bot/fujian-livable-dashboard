@@ -2,8 +2,10 @@ import type { CityGeoJSON } from "@/types/map";
 
 /**
  * 可切换地图配置：公司运营中心七城（地级市粒度，下钻到区县）。
- * 地理边界来自阿里云 DataV GeoJSON CDN（{adcode}_full 含区县边界），
- * 远程加载失败会抛出错误，由上层 ErrorBoundary 兜底。
+ * 地理边界文件内置于 public/geo/（同源加载，不依赖外部 CDN，
+ * 避免预览 / 内网环境访问不了 geo.datav.aliyun.com 导致白屏）。
+ * 原始来源：阿里云 DataV GeoJSON（{adcode}_full 含区县边界），
+ * 缺失时可用 `npm run fetch-geo` 重新下载。
  */
 export type MapId =
   | "quanzhou"
@@ -26,52 +28,52 @@ export interface MapConfig {
   textured: boolean;
 }
 
-const datavBound = (adcode: number) => ({
-  dataUrl: `https://geo.datav.aliyun.com/areas_v3/bound/${adcode}_full.json`,
-  outlineUrl: `https://geo.datav.aliyun.com/areas_v3/bound/${adcode}.json`,
+const localBound = (adcode: number) => ({
+  dataUrl: `${import.meta.env.BASE_URL}geo/${adcode}_full.json`,
+  outlineUrl: `${import.meta.env.BASE_URL}geo/${adcode}.json`,
 });
 
 export const mapConfigs: Record<MapId, MapConfig> = {
   quanzhou: {
     id: "quanzhou",
     label: "泉州市",
-    ...datavBound(350500),
+    ...localBound(350500),
     textured: false,
   },
   xiamen: {
     id: "xiamen",
     label: "厦门市",
-    ...datavBound(350200),
+    ...localBound(350200),
     textured: false,
   },
   fuzhou: {
     id: "fuzhou",
     label: "福州市",
-    ...datavBound(350100),
+    ...localBound(350100),
     textured: false,
   },
   hangzhou: {
     id: "hangzhou",
     label: "杭州市",
-    ...datavBound(330100),
+    ...localBound(330100),
     textured: false,
   },
   guangzhou: {
     id: "guangzhou",
     label: "广州市",
-    ...datavBound(440100),
+    ...localBound(440100),
     textured: false,
   },
   changsha: {
     id: "changsha",
     label: "长沙市",
-    ...datavBound(430100),
+    ...localBound(430100),
     textured: false,
   },
   changchun: {
     id: "changchun",
     label: "长春市",
-    ...datavBound(220100),
+    ...localBound(220100),
     textured: false,
   },
 };
