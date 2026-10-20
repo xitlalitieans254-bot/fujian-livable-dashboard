@@ -247,3 +247,85 @@ export const indexColorAt = (v: number, year: number) => {
   const hi = max + span * 0.04;
   return scoreToColor(clamp01((v - lo) / (hi - lo)));
 };
+
+// ── 区县级演示数据 ──
+// 切换到福州市 / 厦门市 / 泉州市地图后，渲染单元是区县（如鼓楼区、晋江市），
+// 官方源表只有九市粒度，没有区县真实统计。这里用「区县名 → 确定性伪随机」
+// 生成一套稳定的演示指标：同一区县在不同年份的值固定、围绕其母市真实值小幅波动，
+// 保证地图着色、抬升高度、标签数值可正常展示。接入真实区县数据后删除此段即可。
+
+/** 字符串 → 0~1 确定性哈希（同一名字永远得到同一值）。 */
+const nameHash = (name: string) => {
+  let h = 2166136261;
+  for (let i = 0; i < name.length; i++) {
+    h ^= name.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1000) / 1000;
+};
+
+// 区县名 → 所属地级市（用于让区县演示值围绕母市真实值波动）。
+const districtParentCity = (name: string): string | null => {
+  if (
+    /^(鼓楼区|台江区|仓山区|马尾区|晋安区|长乐区|闽侯县|连江县|罗源县|闽清县|永泰县|平潭县|福清市)$/.test(
+      name
+    )
+  )
+    return "福州市";
+  if (/^(思明区|海沧区|湖里区|集美区|同安区|翔安区)$/.test(name))
+    return "厦门市";
+  if (
+    /^(鲤城区|丰泽区|洛江区|泉港区|惠安县|安溪县|永春县|德化县|金门县|石狮市|晋江市|南安市)$/.test(
+      name
+    )
+  )
+    return "泉州市";
+  return null;
+};
+
+/**
+ * 任意区域（市 / 区县）在指定年份的指标：
+ * 九市返回真实数据；区县返回围绕母市真实值波动的确定性演示数据。
+ */
+export const regionAtYear = (name: string, year: number): CityYear | null => {
+  const real = cityAtYear(name, year);
+  if (real) return real;
+
+  const parentName = districtParentCity(name);
+  const parent = parentName ? cityAtYear(parentName, year) : null;
+  if (!parent) return null;
+
+  const h = nameHash(name);
+  // 围绕母市取值 ±8 波动，并做 0~100 截断。
+  const jitter = (v: number, k: number) =>
+    Math.max(1, Math.min(100, round(v + (nameHash(name + k) - 0.5) * 16, 1)));
+
+  const demo: CityYear = {
+    city: name,
+    year,
+    eco: jitter(parent.eco, 1),
+    health: jitter(parent.health, 2),
+    education: jitter(parent.education, 3),
+    life: jitter(parent.life, 4),
+    space: jitter(parent.space, 5),
+    urbanization: Math.max(
+      10,
+      Math.min(100, round(parent.urbanization + (h - 0.5) * 20, 1))
+    ),
+    gdpPerCapita: Math.max(
+      10000,
+      Math.round(parent.gdpPerCapita * (0.7 + h * 0.6))
+    ),
+    population: Math.max(10, Math.round(parent.population / 8)),
+    density: Math.max(100, round(parent.density * (0.6 + h), 0)),
+    index: 0,
+  };
+  demo.index = round(
+    demo.eco * 0.3 +
+      demo.health * 0.2 +
+      demo.education * 0.2 +
+      demo.life * 0.2 +
+      demo.space * 0.1
+  );
+  return demo;
+};
