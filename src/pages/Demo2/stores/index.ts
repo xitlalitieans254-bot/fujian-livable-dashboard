@@ -5,7 +5,7 @@ import type { MapId } from "../map/mapConfig";
 
 interface ConfigStore {
   mapPlayComplete: boolean;
-  /** 当前展示的地图（福建省 / 福州市 / 厦门市 / 泉州市） */
+  /** 当前展示的地图（运营中心七城之一） */
   mapId: MapId;
   /** 鼠标悬停的城市（临时高亮，离开即清空） */
   hoveredCity: string | null;
@@ -26,7 +26,7 @@ interface ConfigStore {
 export const useConfigStore = create<ConfigStore>()(
   subscribeWithSelector((set, _, store) => ({
     mapPlayComplete: false,
-    mapId: "fujian",
+    mapId: "quanzhou",
     hoveredCity: null,
     selectedCity: null,
     year: latestYear,

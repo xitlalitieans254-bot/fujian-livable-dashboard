@@ -38,7 +38,7 @@ const MapButton = styled.button<{ $active: boolean }>`
   }
 `;
 
-/** 地图切换：福建省（九市）/ 福州市 / 厦门市 / 泉州市（区县）。 */
+/** 地图切换：运营中心七城（泉州 / 厦门 / 福州 / 杭州 / 广州 / 长沙 / 长春，区县粒度）。 */
 export default function MapSwitcher() {
   const mapId = useConfigStore((s) => s.mapId);
   const setMapId = useConfigStore((s) => s.setMapId);
